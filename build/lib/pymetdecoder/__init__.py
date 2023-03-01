@@ -13,12 +13,12 @@ from . import conversion
 ################################################################################
 # LOGGING
 ################################################################################
-# logging.basicConfig(
-#     format   = "%(asctime)s [%(levelname)s] %(message)s",
-#     level    = logging.WARNING,
-#     datefmt  = "%Y-%m-%d %H:%M:%S",
-#     stream   = sys.stdout
-# )
+logging.basicConfig(
+    format   = "%(asctime)s [%(levelname)s] %(message)s",
+    level    = logging.WARNING,
+    datefmt  = "%Y-%m-%d %H:%M:%S",
+    stream   = sys.stdout
+)
 ################################################################################
 # EXCEPTION CLASSES
 ################################################################################
