@@ -298,7 +298,7 @@ class SYNOP(pymetdecoder.Report):
                     try:
                         header = int(next_group[0])
                     except Exception:
-                        logging.warning(pymetdecoder.InvalidGroup(next_group))
+                        # logging.warning(pymetdecoder.InvalidGroup(next_group))
                         next_group = next(groups)
                         continue
                     # NOTE: An extra condition has been added here: group_6 == 0, to ensure that if a radiation group 
