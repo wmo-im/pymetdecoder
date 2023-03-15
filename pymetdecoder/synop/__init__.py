@@ -42,7 +42,8 @@ class SYNOP(pymetdecoder.Report):
             # Get date, time and wind indictator
             YYGGi = next(groups)
             if not self._is_valid_group(YYGGi):
-                logging.warning(pymetdecoder.InvalidGroup(YYGGi))
+                # logging.warning(pymetdecoder.InvalidGroup(YYGGi))
+                raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(YYGGi))
             data["obs_time"] = obs.ObservationTime().decode(YYGGi[0:4])
             data["wind_indicator"] = obs.WindIndicator().decode(YYGGi[4])
 
@@ -90,11 +91,12 @@ class SYNOP(pymetdecoder.Report):
             ### SECTION 1 ###
             # Get precipitation indicator, weather indicator, base of lowest cloud and visibility
             if not self._is_valid_group(next_group):
-                logging.warning(pymetdecoder.InvalidGroup(next_group))
-                data["precipitation_indicator"] = None
-                data["weather_indicator"] = None
-                data["lowest_cloud_base"] = None
-                data["visibility"] = None
+                # logging.warning(pymetdecoder.InvalidGroup(next_group))
+                raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(next_group))
+                # data["precipitation_indicator"] = None
+                # data["weather_indicator"] = None
+                # data["lowest_cloud_base"] = None
+                # data["visibility"] = None
             else:
                 data["precipitation_indicator"] = obs.PrecipitationIndicator().decode(next_group[0:1], country=self.country)
                 data["weather_indicator"] = obs.WeatherIndicator().decode(next_group[1:2])
@@ -105,7 +107,8 @@ class SYNOP(pymetdecoder.Report):
             Nddff = next(groups)
             (cloud_cover, surface_wind) = (None, None)
             if not self._is_valid_group(Nddff):
-                logging.warning(pymetdecoder.InvalidGroup(Nddff))
+                # logging.warning(pymetdecoder.InvalidGroup(Nddff))
+                raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(Nddff))
             else:
                 cloud_cover = obs.CloudCover().decode(Nddff[0:1])
                 surface_wind = obs.SurfaceWind().decode(Nddff[1:5])
@@ -136,14 +139,16 @@ class SYNOP(pymetdecoder.Report):
                     else:
                         header = None
                 except ValueError as e:
-                    logging.warning("{} is not a valid section 1 group".format(next_group))
-                    next_group = next(groups)
-                    continue
+                    # logging.warning("{} is not a valid section 1 group".format(next_group))
+                    raise pymetdecoder.DecodeError("{} is not a valid section 1 group".format(next_group))
+                    # next_group = next(groups)
+                    # continue
                 if header == i:
                     if not self._is_valid_group(next_group):
-                        logging.warning(pymetdecoder.InvalidGroup(next_group))
-                        next_group = next(groups)
-                        continue
+                        # logging.warning(pymetdecoder.InvalidGroup(next_group))
+                        raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(next_group))
+                        # next_group = next(groups)
+                        # continue
                     if i == 1: # Air temperature
                         data["air_temperature"] = obs.Temperature().decode(next_group)
                     elif i == 2: # Dewpoint or relative humidity
@@ -177,17 +182,19 @@ class SYNOP(pymetdecoder.Report):
                                 "Unexpected precipitation group found in section 1, thus unable to decode. Section 0 groups may be missing.")
                     elif i == 7: # Present and past weather
                         if not self._is_valid_group(next_group):
-                            logging.warning("{} is not a valid group (expecting 7wwWW)".format(next_group))
-                            if "_error" not in data:
-                                data["_error"] = []
-                            data["_error"].append(next_group)
-                            continue
+                            # logging.warning("{} is not a valid group (expecting 7wwWW)".format(next_group))
+                            raise pymetdecoder.DecodeError("{} is not a valid group (expecting 7wwWW)".format(next_group))
+                            # if "_error" not in data:
+                            #     data["_error"] = []
+                            # data["_error"].append(next_group)
+                            # continue
 
                         # If the weather indicator says we're not including a group 7 code, yet we find one
                         # something went wrong somewhere
                         try:
                             if self.data["weatherIndicator"].value not in [1, 4, 7]:
-                                logging.warning("Group 7 codes found, despite reported as being omitted (ix = {})".format(self.data["weatherIndicator"].value))
+                                # logging.warning("Group 7 codes found, despite reported as being omitted (ix = {})".format(self.data["weatherIndicator"].value))
+                                raise pymetdecoder.DecodeError("Group 7 codes found, despite reported as being omitted (ix = {})".format(self.data["weatherIndicator"].value))
                         except AttributeError:
                             pass
 
@@ -219,8 +226,9 @@ class SYNOP(pymetdecoder.Report):
             ice_groups = []
             if next_group[0:3] == "222":
                 if not self._is_valid_group(next_group):
-                    logging.warning(pymetdecoder.InvalidGroup(next_group))
-                    next_group = next(groups)
+                    # logging.warning(pymetdecoder.InvalidGroup(next_group))
+                    raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(next_group))
+                    # next_group = next(groups)
                 else:
                     data["displacement"] = obs.ShipDisplacement().decode(next_group)
                     next_group = next(groups)
@@ -237,15 +245,17 @@ class SYNOP(pymetdecoder.Report):
                         else:
                             header = None
                     except ValueError as e:
-                        logging.warning("{} is not a valid section 2 group".format(next_group))
-                        next_group = next(groups)
-                        continue
+                        # logging.warning("{} is not a valid section 2 group".format(next_group))
+                        raise pymetdecoder.DecodeError("{} is not a valid section 2 group".format(next_group))
+                        # next_group = next(groups)
+                        # continue
 
                     if header == i:
                         if not self._is_valid_group(next_group):
-                            logging.warning(pymetdecoder.InvalidGroup(next_group))
-                            next_group = next(groups)
-                            continue
+                            # logging.warning(pymetdecoder.InvalidGroup(next_group))
+                            raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(next_group))
+                            # next_group = next(groups)
+                            # continue
                         if i == 0: # Sea surface temperature
                             data["sea_surface_temperature"] = obs.SeaSurfaceTemperature().decode(next_group)
                         elif i == 1: # Period and height of waves (instrumental)
@@ -298,8 +308,9 @@ class SYNOP(pymetdecoder.Report):
                         header = int(next_group[0])
                     except Exception:
                         # logging.warning(pymetdecoder.InvalidGroup(next_group))
-                        next_group = next(groups)
-                        continue
+                        raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(next_group))
+                        # next_group = next(groups)
+                        # continue
                     # NOTE: An extra condition has been added here: group_6 == 0, to ensure that if a radiation group 
                     # with header = 6 (short wave) and a non radiation group with header = 6 (precipitation) are both 
                     # present, then the former is not decoded as the latter.
@@ -364,7 +375,8 @@ class SYNOP(pymetdecoder.Report):
                     else:
                         if header == 0:
                             if data["region"] is None:
-                                logging.warning("No region information found")
+                                # logging.warning("No region information found")
+                                raise pymetdecoder.DecodeError("No region information found")
                             elif data["region"]["value"] == "Antarctic":
                                 # TODO: tidy this up a bit
                                 data["max_wind"] = obs.SurfaceWind().decode(next_group[1:5])
@@ -380,11 +392,13 @@ class SYNOP(pymetdecoder.Report):
                             data["minimum_temperature"] = obs.Temperature().decode(next_group)
                         elif header == 3:
                             if data["region"] is None:
-                                logging.warning("No region information found")
+                                # logging.warning("No region information found")
+                                raise pymetdecoder.DecodeError("No region information found")
                             elif not data["region"]["value"] in ["II", "III", "IV", "VI"]:
-                                logging.warning("Ground state not measured in region {}".format(data["region"]["value"]))
-                                next_group = next(groups)
-                                continue
+                                # logging.warning("Ground state not measured in region {}".format(data["region"]["value"]))
+                                raise pymetdecoder.DecodeError("Ground state not measured in region {}".format(data["region"]["value"]))
+                                # next_group = next(groups)
+                                # continue
                             data["ground_state"] = obs.GroundState().decode(next_group)
                         elif header == 4:
                             data["ground_state_snow"] = obs.GroundStateSnow().decode(next_group)
@@ -420,11 +434,13 @@ class SYNOP(pymetdecoder.Report):
                             group_6 += 1
                             try:
                                 if "precipitation_indicator" not in data or data["precipitation_indicator"] is None:
-                                    logging.warning("No precipitation indicator information found")
+                                    # logging.warning("No precipitation indicator information found")
+                                    raise pymetdecoder.DecodeError("No precipitation indicator information found")
                                 elif data["precipitation_indicator"]["in_group_3"]:
                                     data["precipitation_s3"] = obs.Precipitation().decode(next_group, tenths=False)
                                 else:
-                                    logging.warning("Unexpected precipitation group found in section 3")
+                                    # logging.warning("Unexpected precipitation group found in section 3")
+                                    raise pymetdecoder.DecodeError("Unexpected precipitation group found in section 3")
                             # except TypeError:
                                 # This happens when an invalid precipitation indicator group was specified earlier
                                 # logging.warning("No precipitation indicator information found")
@@ -432,7 +448,8 @@ class SYNOP(pymetdecoder.Report):
                                 raise pymetdecoder.DecodeError("Unexpected precipitation group found in section 3")
                         elif header == 7:
                             if data["region"] is None:
-                                logging.warning("No region information found")
+                                # logging.warning("No region information found")
+                                raise pymetdecoder.DecodeError("No region information found")
                             elif data["region"]["value"] == "Antarctic":
                                 data["prevailing_wind"] = obs.DirectionCardinal().decode(next_group[1])
                                 data["cloud_drift_direction"] = obs.CloudDriftDirection().decode(next_group)
@@ -472,8 +489,9 @@ class SYNOP(pymetdecoder.Report):
                     next_group = next(groups)
             else:
                 if next_group != "555":
-                    logging.warning("{} is not a valid group".format(next_group))
-                    next_group = next(groups)
+                    # logging.warning("{} is not a valid group".format(next_group))
+                    raise pymetdecoder.DecodeError("{} is not a valid group".format(next_group))
+                    # next_group = next(groups)
 
             ### SECTION 5 ###
             if next_group == "555":
@@ -832,9 +850,10 @@ class SYNOP(pymetdecoder.Report):
                 else:
                     header = None
             except ValueError as e:
-                logging.warning("{} is not a valid section 1 group".format(next_group))
-                next_group = next(groups)
-                continue
+                # logging.warning("{} is not a valid section 1 group".format(next_group))
+                raise pymetdecoder.DecodeError("{} is not a valid section 1 group".format(next_group))
+                # next_group = next(groups)
+                # continue
 
             if header == i:
                 info = section[int(i)]
@@ -850,9 +869,10 @@ class SYNOP(pymetdecoder.Report):
                     continue
                     # raise Exception("cannot determine (header: {}, group: {})".format(header, next_group))
                 if not self._is_valid_group(next_group):
-                    logging.warning("{} is an invalid {} group".format(next_group, this_info[0]))
-                    next_group = next(groups)
-                    continue
+                    # logging.warning("{} is an invalid {} group".format(next_group, this_info[0]))
+                    raise pymetdecoder.DecodeError("{} is an invalid {} group".format(next_group, this_info[0]))
+                    # next_group = next(groups)
+                    # continue
 
                 multiple = this_info[3]["_multiple"] if "_multiple" in this_info[3] else False
                 if isinstance(this_info[1], type):
@@ -1035,7 +1055,8 @@ class SYNOP(pymetdecoder.Report):
                         elif j[2] == "4":
                             data["past_weather"][1]["location"] = loc_max_concentration
                     except KeyError as err:
-                        logging.warning("Cannot decode {} - {} is missing".format(g, str(err)))
+                        # logging.warning("Cannot decode {} - {} is missing".format(g, str(err)))
+                        raise pymetdecoder.DecodeError("Cannot decode {} - {} is missing".format(g, str(err)))
                 elif j[2] in ["5", "6", "7", "8", "9"]:
                     speed_and_dir = obs.PhenomSpeedDir().decode(g)
                     try:
@@ -1050,7 +1071,8 @@ class SYNOP(pymetdecoder.Report):
                         elif j[2] == "9":
                             data["past_weather"][1]["movement"] = speed_and_dir
                     except KeyError as err:
-                        logging.warning("Cannot decode {} - {} is missing".format(g, str(err)))
+                        # logging.warning("Cannot decode {} - {} is missing".format(g, str(err)))
+                        raise pymetdecoder.DecodeError("Cannot decode {} - {} is missing".format(g, str(err)))
                 else:
                     self.handle_not_implemented(g)
             elif j[1] == "8":
