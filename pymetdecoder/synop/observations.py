@@ -7,6 +7,8 @@
 #   * First version
 # TDBA 2020-11-12:
 #   * Merged from individual section scripts
+# TDBA 2023-04-21:
+#   * Fixed erroneous error message for temperatures (#10)
 ################################################################################
 # CONFIGURATION
 ################################################################################
@@ -121,6 +123,33 @@ class Callsign(Observation):
             raise InvalidCode(callsign, "callsign")
     def _encode(self, data):
         return str(data["value"]).upper()
+class CloudBaseBelowStationLevel(Observation):
+    """
+    Clouds with tops below station level (section 4)
+    """
+    _CODE_LEN = 5
+    class Altitude(Observation):
+        _CODE_LEN = 2
+        def _decode(self, HH):
+            return {
+                "value": int(HH) * 100,
+                "quantifier": "isGreaterOrEqual" if int(HH) == 99 else None,
+                "unit": "m"
+            }
+        def _encode(self, data):
+            value = int(data["value"] / 100)
+            if value > 99:
+                value = 99
+            return "{:02d}".format(value)
+    class Description(Observation):
+        _CODE_LEN = 1
+        _CODE_TABLE = ct.CodeTable0552
+    _COMPONENTS = [
+        ("cloud_cover", 0, 1, CloudCover),
+        ("genus", 1, 1, CloudGenus),
+        ("upper_surface_altitude", 2, 2, Altitude),
+        ("description", 4, 1, Description)
+    ]
 class CloudDriftDirection(Observation):
     """
     Direction of cloud drift
@@ -546,9 +575,9 @@ class ImportantWeather(Observation):
     def _decode(self, raw, **kwargs):
         use_4687 = kwargs.get("use_4687", False)
         if use_4687:
-            self._CODE_TABLE = ct.CodeTable4687
+            return ct.CodeTable4687().decode(raw, **kwargs)
         else:
-            return { "value": int(raw), "_table": "4677" }
+            return { "value": int(raw), "_table": "4677", "time_before_obs": kwargs.get("time_before") }
 class LocalPrecipitation(Observation):
     """
     Precipitation character and time of precipitation for Region I
@@ -617,7 +646,7 @@ class MountainCondition(Observation):
         _CODE_TABLE = ct.CodeTable2863
         _CODE_LEN = 1
     _COMPONENTS = [
-        ("conditions", 3, 1, Condition),
+        ("condition", 3, 1, Condition),
         ("evolution", 4, 1, Evolution)
     ]
 class ObservationTime(Observation):
@@ -1100,6 +1129,8 @@ class StationPosition(Observation):
         lat = raw[2:5]  # Latitude
         Q   = raw[6:7]  # Quadrant
         lon = raw[7:11] # Longitude
+        if Q not in ["1", "3", "5", "7"]:
+            raise InvalidCode(Q, "quadrant")
 
         # Check both values are numeric, otherwise we can't get the position
         try:
@@ -1186,14 +1217,14 @@ class StationPosition(Observation):
     class Latitude(Observation):
         def _decode(self, raw, **kwargs):
             quadrant = kwargs.get("quadrant")
-            return "{:.1f}".format(int(raw) / (-10.0 if quadrant in ["3", "5"] else 10.0))
+            return float("{:.1f}".format(int(raw) / (-10.0 if quadrant in ["3", "5"] else 10.0)))
         def _encode(self, data, **kwargs):
             quadrant = kwargs.get("quadrant")
             return int(float(data) * (-10.0 if quadrant in ["3", "5"] else 10.0))
     class Longitude(Observation):
         def _decode(self, raw, **kwargs):
             quadrant = kwargs.get("quadrant")
-            return "{:.1f}".format(int(raw) / (-10.0 if quadrant in ["5", "7"] else 10.0))
+            return float("{:.1f}".format(int(raw) / (-10.0 if quadrant in ["5", "7"] else 10.0)))
         def _encode(self, data, **kwargs):
             quadrant = kwargs.get("quadrant")
             return int(float(data) * (-10.0 if quadrant in ["5", "7"] else 10.0))
@@ -1268,41 +1299,6 @@ class SuddenTemperatureChange(Observation):
         return val
     def _encode_convert(self, data, **kwargs):
         return abs(data)
-class SurfaceWind(Observation):
-    """
-    Surface wind
-    """
-    _CODE_LEN = 4
-    def _decode(self, ddff):
-        # Get direction and speed
-        dd = ddff[0:2]
-        ff = ddff[2:4]
-
-        # Get direction and speed
-        direction = DirectionDegrees().decode(dd)
-        speed = self.Speed().decode(ff)
-
-        # Perform sanity check - if the wind is calm, it can't have a speed
-        if direction is not None and direction["calm"] and speed is not None and speed["value"] > 0:
-            logging.warning("Wind is calm, yet has a speed (dd: {}, ff: {})".format(dd, ff))
-            speed = None
-
-        return {
-            "direction": direction,
-            "speed": speed
-        }
-    def _encode(self, data, **kwargs):
-        return "{dd}{ff}".format(
-            dd = DirectionDegrees().encode(data["direction"] if "direction" in data else None, allow_none=True),
-            ff = self.Speed().encode(data["speed"] if "speed" in data else None)
-        )
-    class Speed(Observation):
-        _CODE_LEN = 2
-        def encode(self, data, **kwargs):
-            if data is not None and data["value"] > 99:
-                return "99 00{}".format(self._encode_value(data))
-            else:
-                return self._encode_value(data)
 class Sunshine(Observation):
     """
     Amount of sunshine
@@ -1351,6 +1347,41 @@ class Sunshine(Observation):
             return val / 10
         def _encode_convert(self, val):
             return int(val * 10)
+class SurfaceWind(Observation):
+    """
+    Surface wind
+    """
+    _CODE_LEN = 4
+    def _decode(self, ddff):
+        # Get direction and speed
+        dd = ddff[0:2]
+        ff = ddff[2:4]
+
+        # Get direction and speed
+        direction = DirectionDegrees().decode(dd)
+        speed = self.Speed().decode(ff)
+
+        # Perform sanity check - if the wind is calm, it can't have a speed
+        if direction is not None and direction["calm"] and speed is not None and speed["value"] > 0:
+            logging.warning("Wind is calm, yet has a speed (dd: {}, ff: {})".format(dd, ff))
+            speed = None
+
+        return {
+            "direction": direction,
+            "speed": speed
+        }
+    def _encode(self, data, **kwargs):
+        return "{dd}{ff}".format(
+            dd = DirectionDegrees().encode(data["direction"] if "direction" in data else None, allow_none=True),
+            ff = self.Speed().encode(data["speed"] if "speed" in data else None)
+        )
+    class Speed(Observation):
+        _CODE_LEN = 2
+        def encode(self, data, **kwargs):
+            if data is not None and data["value"] > 99:
+                return "99 00{}".format(self._encode_value(data))
+            else:
+                return self._encode_value(data)
 class SwellWaves(Observation):
     """
     Swell waves
@@ -1417,8 +1448,10 @@ class Temperature(Observation):
         sn  = group[1:2]
         TTT = group[2:5]
 
-        # The last character can sometimes be a "/" instead of a 0, so fix
-        TTT = re.sub("\/$", "0", TTT)
+        # The last character can sometimes be a "/" instead of a 0, so fix.
+        # But, only do this if the whole thing isn't /// (see issue #10)
+        if TTT != "///":
+            TTT = re.sub("\/$", "0", TTT)
 
         # If sign is not 0 or 1, return None with log message
         if sn not in ["0", "1", "/"]:
@@ -1460,6 +1493,8 @@ class TimeOfEnding(Observation):
     """
     _CODE_LEN = 2
     _CODE_TABLE = ct.CodeTable4077T
+class TropicalSkyState(SimpleCodeTable):
+    _TABLE = "430"
 class VariableLocationIntensity(Observation):
     """
     Variability, location or intensity
