@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setup(
     name             = "pymetdecoder",
-    version          = "0.1.4",
+    version          = "0.1.6",
     author           = "Tim Barnes",
     author_email     = "tdba@bas.ac.uk",
     description      = "Python module to decode/encode met reports e.g. SYNOPs",
     long_description = long_description,
     long_description_content_type = "text/markdown",
-    url              = "https://github.com/antarctica/pymetdecoder",
+    url              = "https://github.com/wmo-im/pymetdecoder",
     license          = "Open Government License v3.0",
     packages         = [
         "pymetdecoder",
