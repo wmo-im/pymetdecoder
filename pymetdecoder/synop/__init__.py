@@ -384,6 +384,11 @@ class SYNOP(pymetdecoder.Report):
                             elif data["region"]["value"] == "I":
                                 data["ground_minimum_temperature"] = obs.GroundMinimumTemperature().decode(next_group[1:3])
                                 data["local_precipitation"] = obs.LocalPrecipitation().decode(next_group[3:5])
+                            elif data["region"]["value"] == "II":
+                                data["ground_state_grass"] = obs.GroundState().decode(next_group)
+                            elif data["region"]["value"] == "IV":
+                                data["tropical_sky_state"] = obs.TropicalSkyState().decode(next_group[1:2])
+                                data["tropical_cloud_drift_direction"] = obs.CloudDriftDirection().decode(next_group)
                             else:
                                 raise NotImplementedError("0xxxx is not valid for region {}".format(data["region"]["value"]))
                         elif header == 1:

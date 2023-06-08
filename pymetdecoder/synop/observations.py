@@ -1460,6 +1460,8 @@ class TimeOfEnding(Observation):
     """
     _CODE_LEN = 2
     _CODE_TABLE = ct.CodeTable4077T
+class TropicalSkyState(SimpleCodeTable):
+    _TABLE = "430"
 class VariableLocationIntensity(Observation):
     """
     Variability, location or intensity
