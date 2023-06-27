@@ -83,9 +83,9 @@ class SYNOP(pymetdecoder.Report):
             # Set the country, where possible
             self.set_country(data)
 
-            # If this section ends with NIL, that's the end of the SYNOP
+            # If this section ends with NIL or nil, that's the end of the SYNOP
             next_group = next(groups)
-            if next_group == "NIL":
+            if (next_group == "NIL") or (next_group == "nil"):
                 return data
 
             ### SECTION 1 ###
