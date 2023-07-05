@@ -708,8 +708,8 @@ class PrecipitationIndicator(Observation):
         country = kwargs.get("country")
         return {
             "value": int(i),
-            "in_group_1": True if (i in ["0", "1"]) or (i == "6" and country == "RU") else False,
-            "in_group_3": True if (i in ["0", "2"]) or (i == "7" and country == "RU") else False
+            "in_group_1": True if (i in ["0", "1", "3"]) or (i == "6" and country == "RU") else False,
+            "in_group_3": True if (i in ["0", "2", "3"]) or (i == "7" and country == "RU") else False
         }
     def _encode(self, data):
         # TODO: include autodetect i.e.
