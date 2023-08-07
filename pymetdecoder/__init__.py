@@ -26,7 +26,7 @@ class DecodeError(Exception):
     def __init__(self, msg):
         self.msg = msg
     def __str__(self):
-        result = self.msg
+        result = str(self.msg)
         return result
 class EncodeError(Exception):
     def __init__(self, msg):
