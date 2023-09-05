@@ -13,12 +13,7 @@ from . import conversion
 ################################################################################
 # LOGGING
 ################################################################################
-# logging.basicConfig(
-#     format   = "%(asctime)s [%(levelname)s] %(message)s",
-#     level    = logging.WARNING,
-#     datefmt  = "%Y-%m-%d %H:%M:%S",
-#     stream   = sys.stdout
-# )
+LOGGER = logging.getLogger(__name__)
 ################################################################################
 # EXCEPTION CLASSES
 ################################################################################
@@ -115,14 +110,14 @@ class Observation(object):
             # Decode
             return self._decode(raw, **kwargs)
         except NotImplementedError as e:
-            logging.error(str(e))
+            LOGGER.error(str(e))
             sys.exit(1)
         except InvalidCode as e:
-            logging.warning(str(e))
+            LOGGER.warning(str(e))
             # NOTE: We also raise an error here to prevent the decoder from continuing.
             raise DecodeError(str(e))
         except Exception as e:
-            logging.warning(str(e))
+            LOGGER.warning(str(e))
             raise DecodeError("Unable to decode group {}".format(raw))
     def encode(self, raw, **kwargs):
         """
@@ -150,12 +145,12 @@ class Observation(object):
             else:
                 return "{}{}".format(group, val)
         except NotImplementedError as e:
-            logging.error(str(e))
+            LOGGER.error(str(e))
             sys.exit(1)
         except conversion.ConversionError as e:
-            logging.warning(str(e))
+            LOGGER.warning(str(e))
         except Exception as e:
-            logging.warning("No valid {}. Using {}".format(type(self).__name__, self._ENCODE_DEFAULT))
+            LOGGER.warning("No valid {}. Using {}".format(type(self).__name__, self._ENCODE_DEFAULT))
             if "group" in kwargs:
                 return "{}{}".format(kwargs.get("group"), self._ENCODE_DEFAULT)
             else:
@@ -213,7 +208,7 @@ class Observation(object):
             if raise_exception:
                 raise foo
             else:
-                logging.warning(foo.msg)
+                LOGGER.warning(foo.msg)
         return valid
     def _is_valid(self, value, **kwargs):
         """
@@ -293,10 +288,10 @@ class Observation(object):
                 data["unit"] = unit
             return data
         except ValueError as e:
-            logging.warning(InvalidCode(val, type(self).__name__))
+            LOGGER.warning(InvalidCode(val, type(self).__name__))
             return None
         except Exception as e:
-            logging.warning(str(e))
+            LOGGER.warning(str(e))
             return None
     def _encode_value(self, data, **kwargs):
         try:
