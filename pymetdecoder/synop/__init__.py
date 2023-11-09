@@ -135,7 +135,9 @@ class SYNOP(pymetdecoder.Report):
             # Parse the next group, based on the group header
             for i in range(1, 10):
                 try:
-                    if not re.match("^(222|333)", next_group):
+                    # NOTE: Sections 4 and 5 should be checked for
+                    # in addition to sections 2 and 3
+                    if not re.match("^(222|333|444|555)", next_group):
                         header = int(next_group[0:1])
                     else:
                         header = None
@@ -225,7 +227,7 @@ class SYNOP(pymetdecoder.Report):
             # ### SECTION 2 ###
             has_section_2 = False
             ice_groups = []
-            if next_group[0:3] == "222":
+            if next_group == "222":
                 if not self._is_valid_group(next_group):
                     # logging.warning(pymetdecoder.InvalidGroup(next_group))
                     raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(next_group))
@@ -241,7 +243,9 @@ class SYNOP(pymetdecoder.Report):
             if has_section_2:
                 for i in range(0, 9):
                     try:
-                        if not re.match("^(ICE|333)$", next_group):
+                        # NOTE: Sections 4 and 5 should be checked for
+                        # in addition to ICE and section 3
+                        if not re.match("^(ICE|333|444|555)$", next_group):
                             header = int(next_group[0:1])
                         else:
                             header = None
@@ -287,7 +291,9 @@ class SYNOP(pymetdecoder.Report):
 
                 # ICE groups
                 if next_group == "ICE":
-                    while next_group[0:3] != "333":
+                    # NOTE: Sections 4 and 5 should be checked for
+                    # in addition to section 3
+                    while not re.match("^(333|444|555)$", next_group):
                         ice_groups.append(next_group)
                         next_group = next(groups)
                 if len(ice_groups) > 0:
@@ -303,7 +309,7 @@ class SYNOP(pymetdecoder.Report):
                 while True:
                     # NOTE: Here we must also check for "444" to ensure that pymetdecoder does not recursively
                     # decode groups of section 4 as if they were groups of section 3
-                    if re.match("^(444)$", next_group) or re.match("^(555)$", next_group):
+                    if re.match("^(444|555)$", next_group):
                         break
                     try:
                         header = int(next_group[0])
