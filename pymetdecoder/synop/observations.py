@@ -14,6 +14,10 @@ import re
 from pymetdecoder import Observation, logging, DecodeError, EncodeError, InvalidCode
 from pymetdecoder import code_tables as ct
 ################################################################################
+# LOGGING
+################################################################################
+LOGGER = logging.getLogger(__name__)
+################################################################################
 # SHARED CLASSES
 ################################################################################
 class SimpleCodeTable(Observation):
@@ -211,7 +215,7 @@ class CloudType(Observation):
             elif data["middle_cloud_type"] is not None and 0 <= data["middle_cloud_type"]["value"] <= 9:
                 data["middle_cloud_amount"] = cover
             else:
-                logging.warning("Cloud cover (Nh = {}) reported, but there are no low or middle clouds (CL = {}, CM = {})".format(Nh, CL, CM))
+                LOGGER.warning("Cloud cover (Nh = {}) reported, but there are no low or middle clouds (CL = {}, CM = {})".format(Nh, CL, CM))
                 data["cloud_amount"] = cover
 
         # Return data
@@ -708,8 +712,8 @@ class PrecipitationIndicator(Observation):
         country = kwargs.get("country")
         return {
             "value": int(i),
-            "in_group_1": True if (i in ["0", "1"]) or (i == "6" and country == "RU") else False,
-            "in_group_3": True if (i in ["0", "2"]) or (i == "7" and country == "RU") else False
+            "in_group_1": True if (i in ["0", "1", "3"]) or (i == "6" and country == "RU") else False,
+            "in_group_3": True if (i in ["0", "2", "3"]) or (i == "7" and country == "RU") else False
         }
     def _encode(self, data):
         # TODO: include autodetect i.e.
@@ -1122,9 +1126,9 @@ class StationPosition(Observation):
 
             # Check latitude unit digit and longitude unit digit match expected values
             if lat[-2] != ULa:
-                logging.warning("Latitude unit digit does not match expected value ({} != {})".format(str(lat)[-2], ULa))
+                LOGGER.warning("Latitude unit digit does not match expected value ({} != {})".format(str(lat)[-2], ULa))
             if lon[-2] != ULo:
-                logging.warning("Longitude unit digit does not match expected value ({} != {})".format(str(lon)[-2], ULo))
+                LOGGER.warning("Longitude unit digit does not match expected value ({} != {})".format(str(lon)[-2], ULo))
 
             # Decode values
             data["marsden_square"] = self.MarsdenSquare().decode(MMM)
@@ -1284,7 +1288,7 @@ class SurfaceWind(Observation):
 
         # Perform sanity check - if the wind is calm, it can't have a speed
         if direction is not None and direction["calm"] and speed is not None and speed["value"] > 0:
-            logging.warning("Wind is calm, yet has a speed (dd: {}, ff: {})".format(dd, ff))
+            LOGGER.warning("Wind is calm, yet has a speed (dd: {}, ff: {})".format(dd, ff))
             speed = None
 
         return {
@@ -1422,7 +1426,7 @@ class Temperature(Observation):
 
         # If sign is not 0 or 1, return None with log message
         if sn not in ["0", "1", "/"]:
-            logging.warning("{} is an invalid temperature group".format(group))
+            LOGGER.warning("{} is an invalid temperature group".format(group))
             return None
 
         # Return value
@@ -1460,6 +1464,8 @@ class TimeOfEnding(Observation):
     """
     _CODE_LEN = 2
     _CODE_TABLE = ct.CodeTable4077T
+class TropicalSkyState(SimpleCodeTable):
+    _TABLE = "430"
 class VariableLocationIntensity(Observation):
     """
     Variability, location or intensity
@@ -1493,7 +1499,7 @@ class VisibilityDirection(Observation):
 
         # Check if direction is valid
         if dir == "/":
-            logging.warning(InvalidCode(dir, "visibility direction"))
+            LOGGER.warning(InvalidCode(dir, "visibility direction"))
             return None
 
         # If direction code is 9, it's variable visibility
