@@ -1130,7 +1130,7 @@ class SYNOP(pymetdecoder.Report):
             return False
         regexp_parts = ["\d"]
         if allowSlashes:
-            regexp_parts.append("\/")
+            regexp_parts.append("/")
         if multipleGroups:
             regexp_parts.append(" ")
         regexp = "[{}]{{{}}}".format("".join(regexp_parts), length)

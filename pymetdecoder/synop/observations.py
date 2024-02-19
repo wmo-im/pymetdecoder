@@ -114,12 +114,12 @@ class Callsign(Observation):
     * Abnnn - WMO regional association area
     """
     def _decode(self, callsign):
-        if re.match("^(1[1-7]|2[1-6]|3[1-4]|4[1-8]|5[1-6]|6[1-6]|7[1-4])\d{3}$", callsign):
+        if re.match(r"^(1[1-7]|2[1-6]|3[1-4]|4[1-8]|5[1-6]|6[1-6]|7[1-4])\d{3}$", callsign):
             return {
                 "region": ct.CodeTable0161().decode(callsign[0:2]),
                 "value":  callsign
             }
-        elif re.match("^[A-Za-z\d]{3,}", callsign):
+        elif re.match(r"^[A-Za-z\d]{3,}", callsign):
             return { "value": str(callsign).upper() }
         else:
             raise InvalidCode(callsign, "callsign")
@@ -1422,7 +1422,7 @@ class Temperature(Observation):
         TTT = group[2:5]
 
         # The last character can sometimes be a "/" instead of a 0, so fix
-        TTT = re.sub("\/$", "0", TTT)
+        TTT = re.sub(r"/$", "0", TTT)
 
         # If sign is not 0 or 1, return None with log message
         if sn not in ["0", "1", "/"]:
