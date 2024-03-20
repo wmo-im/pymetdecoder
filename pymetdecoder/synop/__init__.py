@@ -227,7 +227,7 @@ class SYNOP(pymetdecoder.Report):
             # ### SECTION 2 ###
             has_section_2 = False
             ice_groups = []
-            if next_group == "222":
+            if next_group[0:3] == "222":
                 if not self._is_valid_group(next_group):
                     # logging.warning(pymetdecoder.InvalidGroup(next_group))
                     raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(next_group))
@@ -311,11 +311,18 @@ class SYNOP(pymetdecoder.Report):
                     # decode groups of section 4 as if they were groups of section 3
                     if re.match("^(444|555)$", next_group):
                         break
+
+                    # If the group is just slashes, skip it and move to the next group
+                    if re.match("^/////$", next_group):
+                        next_group = next(groups)
+                        continue
+
                     try:
                         header = int(next_group[0])
                     except Exception:
                         # logging.warning(pymetdecoder.InvalidGroup(next_group))
                         raise pymetdecoder.DecodeError(pymetdecoder.InvalidGroup(next_group))
+
                         # next_group = next(groups)
                         # continue
                     # NOTE: An extra condition has been added here: group_6 == 0, to ensure that if a radiation group 

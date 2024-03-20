@@ -1006,7 +1006,8 @@ class ShipDisplacement(Observation):
         v = group[4]
 
         # should 22200 be decoded? it represents a stationary sea station (12.3.1.2)
-        if D == "0" and v == "0":
+        # 222// represents either a costal land station or a supplementary ship
+        if (D == "0" and v == "0") or (D == "/" and v == "/"):
             return None
 
         return {
