@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setup(
     name             = "pymetdecoder-wmo",
-    version          = "0.1.12",
+    version          = "0.1.13",
     author           = "Tim Barnes",
     author_email     = "tdba@bas.ac.uk",
-    description      = "Python module to decode/encode met reports e.g. SYNOPs, adapted for use for the synop2bufr module.",
+    description      = "Python module to decode/encode met reports e.g. SYNOPs, adapted for use with the synop2bufr module.",
     long_description = long_description,
     long_description_content_type = "text/markdown",
     url              = "https://github.com/wmo-im/pymetdecoder",
