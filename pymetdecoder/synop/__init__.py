@@ -124,7 +124,7 @@ class SYNOP(pymetdecoder.Report):
                 next_group = next(groups)
                 if data["surface_wind"] is not None and "speed" in data["surface_wind"]:
                     if data["surface_wind"]["speed"] is not None and str(data["surface_wind"]["speed"]["value"]) == "99":
-                        if re.match("^00\d{3}", next_group):
+                        if re.match(r"^00\d{3}", next_group):
                             data["surface_wind"]["speed"]["value"] = int(next_group[2:5])
                             next_group = next(groups)
             except StopIteration:
@@ -1135,7 +1135,7 @@ class SYNOP(pymetdecoder.Report):
         """
         if len(group) != length:
             return False
-        regexp_parts = ["\d"]
+        regexp_parts = [r"\d"]
         if allowSlashes:
             regexp_parts.append("/")
         if multipleGroups:
