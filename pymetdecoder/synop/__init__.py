@@ -64,7 +64,7 @@ class SYNOP(pymetdecoder.Report):
             # Now add the station ID if it is an AAXX station. Otherwise, add the current position
             if data["station_type"]["value"] == "AAXX":
                 group = next(groups)
-                if not self._is_valid_group(group, allowSlashes=False):
+                if not self._is_valid_group(group):
                     raise pymetdecoder.DecodeError("{} is an invalid IIiii group".format(group))
                 data["station_id"] = obs.StationID().decode(group)
                 data["region"]     = obs.Region().decode(group)
