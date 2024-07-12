@@ -938,11 +938,6 @@ class SYNOP(pymetdecoder.Report):
                         measure_period = { "value": 10, "unit": "min" }
                     ))
                 elif j[2] == "1":
-                    # try:
-                    #     time_before = time_before_obs
-                    # except Exception:
-                    #     time_before = def_time_before
-                    # Check for direction
                     parse = [g]
                     try:
                         if group_9[idx + 1].startswith("915"):
@@ -956,6 +951,13 @@ class SYNOP(pymetdecoder.Report):
                     data["highest_gust"].append(obs.HighestGust().decode(" ".join(parse),
                         unit = data["wind_indicator"]["unit"] if data["wind_indicator"] is not None else None,
                         time_before = time_before_obs
+                    ))
+                elif j[2] == "2":
+                    if "highest_gust" not in data:
+                        data["highest_gust"] = []
+                    data["highest_gust"].append(obs.HighestGust().decode(g,
+                        unit = data["wind_indicator"]["unit"] if data["wind_indicator"] is not None else None,
+                        measure_period = { "value": 10, "unit": "min" }
                     ))
                 else:
                     self.handle_not_implemented(g)
